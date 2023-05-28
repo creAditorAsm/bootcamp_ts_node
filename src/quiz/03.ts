@@ -43,8 +43,8 @@ type PasswordRequirementOption = {
   requireNumbers?: boolean;
   requireSmallLetters?: boolean;
   requireCapitalLetters?: boolean;
-  unknownOptions?: any;
 };
+
 type PasswordRequirementResult =
   | "ok"
   | "missingNumber"
@@ -53,19 +53,31 @@ type PasswordRequirementResult =
 
 const checkPasswordRequirement = (
   password: string,
-  option: PasswordRequirementOption = {}
+  option: Partial<PasswordRequirementOption> = {}
 ): PasswordRequirementResult => {
-  if (option?.requireNumbers) {
+  const { requireNumbers, requireSmallLetters, requireCapitalLetters } = option;
+
+  for (const key of Object.keys(option)) {
+    if (
+      !["requireNumbers", "requireSmallLetters", "requireCapitalLetters"].includes(
+        key
+      )
+    ) {
+      throw new Error(`Invalid option: ${key}`);
+    }
+  }
+
+  if (requireNumbers) {
     if (!/\d/.test(password)) {
       return "missingNumber";
     }
   }
-  if (option?.requireSmallLetters) {
+  if (requireSmallLetters) {
     if (!/[a-z]/.test(password)) {
       return "missingSmallLetter";
     }
   }
-  if (option?.requireCapitalLetters) {
+  if (requireCapitalLetters) {
     if (!/[A-Z]/.test(password)) {
       return "missingCapitalLetter";
     }
@@ -79,11 +91,13 @@ const checkPasswordRequirementOk4 = checkPasswordRequirement("password123", {
   requireSmallLetters: true,
   requireCapitalLetters: true,
 });
-const checkPasswordRequirementTypeError1: PasswordRequirementResult =
-  checkPasswordRequirement("1");
-const checkPasswordRequirementTypeError2: PasswordRequirementResult =
-  checkPasswordRequirement("password", undefined);
-const checkPasswordRequirementTypeError3: PasswordRequirementResult =
-  checkPasswordRequirement("password", { requireNumbers: undefined });
+
+const checkPasswordRequirementTypeError1: PasswordRequirementResult = 
+checkPasswordRequirement("1");
+const checkPasswordRequirementTypeError2: PasswordRequirementResult = 
+checkPasswordRequirement("password");
+const checkPasswordRequirementTypeError3: PasswordRequirementResult = 
+checkPasswordRequirement("password", { requireNumbers: undefined });
+const { unknownOptions, ...options } = { unknownOptions: false, ...{} };
 const checkPasswordRequirementTypeError4: PasswordRequirementResult =
-  checkPasswordRequirement("password", { unknownOptions: false });
+checkPasswordRequirement("password", options);
